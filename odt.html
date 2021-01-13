@@ -1,0 +1,203 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Observing Definition Tool</title>
+
+  <script src="https://unpkg.com/vue@next"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+  <link href="odt.css" rel="stylesheet">
+</head>
+<body>
+
+
+<!--Main Vue app container -->
+<div id="app">
+  
+<nav class="navbar navbar-expand-md navbar-dark bg-dark ">
+  <a class="navbar-brand p-1" href="#">ODT</a>
+  <div class="container-fluid">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+      <ul class="navbar-nav me-auto mb-2 mb-md-0">
+        <li class="nav-item">
+          <a class="nav-link" href="#">Targets</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Configurations</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Sequences</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Observing Blocks</a>
+        </li>
+      </ul>
+      <a class="nav-link" href="#">Josh Riley</a>
+      <form class="d-flex">
+        <button class="btn btn-outline-danger" type="submit">Logout</button>
+      </form>
+    </div>
+  </div>
+</nav>
+
+<p>
+<h3 class="p-1">Target List Manager</h3>
+
+<!--Starlist add/edit form-->
+<p>
+<form id="target-form" @submit.prevent="processTargetForm">
+<div class='container'>
+
+  <table class="table table-responsive table-borderless align-bottom"><tr>
+    <td align="left">
+      <span v-if="editId" class="p-1 mb-2 bg-primary text-white">Editing target ID {{editId}}</span>
+      <span v-else        class="p-1 mb-2 bg-success text-white">Adding new target</span>
+    </td>
+    <td align="right">
+      <button v-if="!editId" type="button" class="btn btn-outline-warning" @click="onClearForm()">Clear form</button>&nbsp;
+      <button v-if="editId"  type="button" class="btn btn-outline-success" @click="onNewTarget()">New</button>&nbsp;
+      <button v-if="editId"  type="button" class="btn btn-outline-secondary" @click="duplicateTarget(editId)">Duplicate</button>&nbsp;
+      <button v-if="editId"  type="button" class="btn btn-outline-danger" @click="deleteTarget(editId)">Delete</button>
+    </td>
+  </tr></table>
+
+  <div class="row">
+
+    <div class="col border rounded bg-light">
+      <h5>Definition</h5>
+        <div class="row"><div class="col"><input type="text" class="form-control" v-model="tgtName" placeholder="Name" ></div></div>
+        <div class="row"><div class="col"><input type="text" class="form-control" v-model="tgtRa" placeholder="RA" ></div></div>
+        <div class="row"><div class="col"><input type="text" class="form-control" v-model="tgtDec" placeholder="DEC" ></div></div>
+        <div class="row"><div class="col"><input type="text" class="form-control" v-model="tgtEquinox" placeholder="Equinox" ></div></div>
+        <div class="row"><div class="col"><input type="text" class="form-control" v-model="tgtMagnitude" placeholder="Magnitude" ></div></div>
+        <div class="row"><div class="col"><input type="text" class="form-control" v-model="tgtPm" placeholder="PM" ></div></div>
+        <div class="row"><div class="col"><input type="text" class="form-control" v-model="tgtPa" placeholder="PA" ></div></div>
+        <div class="row"><div class="col"><input type="text" class="form-control" v-model="tgtOffset" placeholder="Offsets" ></div></div>
+    </div>
+
+
+    <div class="col border rounded bg-light ms-3">
+      <h5>Acquisition</h5>
+      <div class="form-check">
+        <input class="form-check-input" type="radio" name="acq" id="exampleRadios1" value="option1" checked>
+        <label class="form-check-label" for="exampleRadios1">Direct</label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="radio" name="acq" id="exampleRadios2" value="option2">
+        <label class="form-check-label" for="exampleRadios2">Offset star</label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="radio" name="acq" id="exampleRadios3" value="option3">
+        <label class="form-check-label" for="exampleRadios3">Long slit</label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="radio" name="acq" id="exampleRadios3" value="option3">
+        <label class="form-check-label" for="exampleRadios3">SAT</label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="radio" name="acq" id="exampleRadios3" value="option3">
+        <label class="form-check-label" for="exampleRadios3">AO</label>
+      </div>
+    </div>
+
+
+    <div class="col border rounded bg-light ms-3">
+      <h5>Type</h5>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="type" id="exampleRadios1" value="option1" checked>
+          <label class="form-check-label" for="exampleRadios1">Science</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="type" id="exampleRadios2" value="option2">
+          <label class="form-check-label" for="exampleRadios2">Flux Standard</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="type" id="exampleRadios3" value="option3">
+          <label class="form-check-label" for="exampleRadios3">Telluric standard</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="type" id="exampleRadios3" value="option3">
+          <label class="form-check-label" for="exampleRadios3">Other</label>
+          <br><input type="text" class="form-control" placeholder="specify" >
+        </div>
+    </div>
+
+
+    <div class="col-6 border rounded bg-light ms-3">
+      <h5>FOV</h5>
+      <img src="fov.png" class="img-fluid" alt="...">
+    </div>
+
+  </div>
+
+  <br>
+  <button v-if="editId" type="submit" class="btn btn-outline-primary">update target</button>
+  <button v-else        type="submit" class="btn btn-outline-success">add target</button>
+
+</div>
+</form>
+
+
+
+<p><hr>
+
+<!--Startlist table -->
+<div class='container'>
+
+  <span class="p-1 mb-2 bg-primary text-white">Your Starlists</span>
+  <p>
+  <table class="table table-responsive table-borderless"><tr>
+    <td align="left" valign="top">
+      <input type="text" class="form-control" v-model="nameSearch" placeholder="target name search" @change="onSearchName"/>
+    </td>
+    <td align="right" valign="top">
+      <button @click="changePage(-1)">&lt;</button> 
+      Page {{curPage+1}} of {{numPages}}
+      <button @click="changePage(1)">&gt;</button>
+    </td>
+  </tr></table>
+  </p>
+  <table class="table table-responsive table-striped table-sm border rounded bg-light">
+    <thead class="text-light bg-dark">
+      <tr>
+        <th role="button" @click="sort('id')">ID</th>
+        <th role="button" @click="sort('name')">Name</th>
+        <th role="button" @click="sort('ra')">Ra</th>
+        <th role="button" @click="sort('dec')">Dec</th>
+        <th role="button" @click="sort('equinox')">Equinox</th>
+        <th role="button" @click="sort('magnitude')">Magnitude</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="target in sortedTargets">
+        <td>{{target.id}}</td>
+        <td>{{target.name}}</td>
+        <td>{{target.ra}}</td>
+        <td>{{target.dec}}</td>
+        <td>{{target.equinox}}</td>
+        <td>{{target.magnitude}}</td>
+        <td>
+          <button class="btn btn-outline-primary"@click="editTarget(target.id)">edit</button>
+          &nbsp;
+          <button class="btn btn-outline-danger" @click="deleteTarget(target.id)">delete</button>
+        </td>
+      </tr>
+    </tbody>
+  </table> 
+</div>
+
+
+<!--End Main Vue app container -->
+</div>
+
+<script src="odt.js"></script>
+</body>
+</html>
+
